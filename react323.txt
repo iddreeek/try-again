@@ -1,0 +1,118 @@
+import "./App.css";
+import { React, useState, useCallback, useMemo } from "react";
+import { Calendar, momentLocalizer, Views } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import moment from "moment";
+
+const localizer = momentLocalizer(moment);
+
+const participants = [
+  {
+    userId: "1",
+    name: "Alice",
+    color: "#357cd2",
+  },
+  {
+    userId: "2",
+    name: "Bob",
+    color: "#ff0000",
+  },
+];
+
+const events = [
+  {
+    title: "Team Meeting",
+    start: new Date(2023, 11, 1),
+    end: new Date(2023, 11, 2),
+    participants: participants.map((participant) => participant.name), // Participants associated with this event
+  },
+  // Add more events as needed
+];
+
+const getParticipantColors = () => {
+  const participantColors = {};
+
+  participants.forEach((participant) => {
+    const { name, color } = participant;
+    participantColors[name] = color;
+  });
+  return participantColors;
+};
+
+function App() {
+  const participantColors = getParticipantColors();
+  const eventContent = ({ event }) => (
+    <div>
+      <strong>{event.title}</strong>
+      <br />
+      {event.participants.map((participant, index) => (
+        <span
+          key={index}
+          style={{
+            display: "inline-block",
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            backgroundColor: participantColors[participant], // Participant's color or any distinguishing color
+            marginRight: "2px",
+          }}
+          title={participant}
+        />
+      ))}
+    </div>
+  );
+
+  const [myEvents, setEvents] = useState(events);
+
+  const handleSelectSlot = useCallback(
+    ({ start, end }) => {
+      const title = window.prompt("New Event name");
+      if (title) {
+        setEvents((prev) => [...prev, { start, end, title, participants: participants.map((participant) => participant.name),}]);
+      }
+    },
+    [setEvents]
+  );
+
+  const handleSelectEvent = useCallback(
+    (event) => window.alert(event.title),
+    []
+  );
+
+  const { defaultDate, scrollToTime } = useMemo(
+    () => ({
+      defaultDate: new Date(),
+      scrollToTime: new Date(1970, 1, 1, 6),
+    }),
+    []
+  );
+  return (
+    <div style={{ height: 500 }}>
+      <Calendar
+        defaultDate={defaultDate}
+        defaultView={Views.MONTH}
+        events={myEvents}
+        localizer={localizer}
+        onSelectEvent={handleSelectEvent}
+        onSelectSlot={handleSelectSlot}
+        selectable
+        scrollToTime={scrollToTime}
+        startAccessor="start"
+        endAccessor="end"
+        eventPropGetter={(event) => ({
+          style: {
+            backgroundColor: "darkgray", // Event background color
+            border: "1px solid #ddd", // Event border color
+            borderRadius: "5px",
+          },
+        })}
+        components={{
+          event: eventContent, // Assign custom event content
+        }}
+        style={{ margin: "50px" }}
+      />
+    </div>
+  );
+}
+
+export default App;
